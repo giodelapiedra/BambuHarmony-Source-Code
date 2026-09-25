@@ -10,3 +10,4 @@ undefined
 *.md
 viber_notify.py
 !DEPLOYMENT_GUIDE.md
+!README.md
