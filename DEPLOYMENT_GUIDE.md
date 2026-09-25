@@ -1,6 +1,6 @@
 # Bambu Harmony Living — Frontend Deployment Guide
 
-**Avietho Digital** · Guide sa pag-upload ng website, pag-setup ng Google Analytics, at Viber lead notifications.
+**Avietho Digital** · How to deploy the website, set up Google Analytics, and configure Viber lead notifications.
 
 Live site: https://www.bambuharmony.ph
 
@@ -8,11 +8,11 @@ Live site: https://www.bambuharmony.ph
 
 ## 1. Requirements
 
-- **Node.js 18 o mas bago** — https://nodejs.org
+- **Node.js 18 or newer** — https://nodejs.org
 - **Git**
-- Access sa GitHub repo na ito
+- Access to this GitHub repository
 
-I-check kung installed na:
+Check that they are installed:
 
 ```bash
 node -v
@@ -22,9 +22,9 @@ git --version
 
 ---
 
-## 2. I-setup at i-build ang project
+## 2. Set up and build the project
 
-### 2.1 I-download ang source code
+### 2.1 Get the source code
 
 ```bash
 git clone https://github.com/giodelapiedra/BambuHarmony-Source-Code.git
@@ -32,51 +32,51 @@ cd BambuHarmony-Source-Code
 npm install
 ```
 
-### 2.2 I-set ang API URL
+### 2.2 Set the API URL
 
-Ang website ay nagse-send ng inquiries / leads sa backend API. Kopyahin ang `.env.example` at gawing `.env`:
+The website sends inquiries / leads to the backend API. Copy `.env.example` to `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-Laman ng `.env`:
+Contents of `.env`:
 
 ```env
 VITE_API_URL=https://bambuharmonyapi.aviethodigital.com/api
 ```
 
-> Kung walang `VITE_API_URL`, ang default ay `http://localhost:5000/api` (makikita sa `src/services/api.js`). Sa live site, **dapat naka-set ito** o hindi papasok ang mga leads.
+> If `VITE_API_URL` is not set, it falls back to `http://localhost:5000/api` (see `src/services/api.js`). On the live site this **must be set**, otherwise leads will not be received.
 
-### 2.3 Patakbuhin sa local (para mag-test)
+### 2.3 Run locally (for testing)
 
 ```bash
 npm run dev
 ```
 
-Buksan ang http://localhost:5173
+Open http://localhost:5173
 
-### 2.4 I-build para sa production
+### 2.4 Build for production
 
 ```bash
 npm run build
 ```
 
-Ang output ay nasa folder na **`dist/`**. Ito ang ia-upload sa kahit anong hosting.
+The output goes to the **`dist/`** folder. This is what you upload to any hosting provider.
 
-Ang `npm run build` ay may dalawang hakbang:
-1. `vite build` — ginagawa ang website files
-2. `node scripts/seo-postbuild.mjs` — gumagawa ng hiwalay na `index.html` bawat page (`/about`, `/care-options`, `/location`, `/contact`) na may sariling title at description para sa Google, at ng `sitemap.xml`
+`npm run build` runs two steps:
+1. `vite build` — builds the website files
+2. `node scripts/seo-postbuild.mjs` — writes a separate `index.html` for each page (`/about`, `/care-options`, `/location`, `/contact`) with its own title and description for Google, plus a `sitemap.xml`
 
 ---
 
 ## 3. Google Analytics / Google Tag Manager
 
-### 3.1 Saan nakalagay sa source code
+### 3.1 Where it lives in the source code
 
-**File: `index.html`** (nasa root ng project, hindi sa `src/`)
+**File: `index.html`** (in the project root, not in `src/`)
 
-May marker comment sa loob ng `<head>`:
+There is a marker comment inside `<head>`:
 
 ```html
 <!--
@@ -85,21 +85,21 @@ May marker comment sa loob ng `<head>`:
 -->
 ```
 
-Sa ilalim nito ay dalawang script:
+Below it are the scripts:
 
-| Ano | Saan sa `index.html` | Current ID |
+| What | Where in `index.html` | Current ID |
 |---|---|---|
-| Google Tag Manager | `<head>`, block na `<!-- Google Tag Manager -->` | `GTM-NP3BQMJ6` |
-| Google Analytics 4 (gtag.js) | `<head>`, block na `<!-- Google tag (gtag.js) -->` | `G-YK4RD62DQ6` |
-| Google Tag Manager (noscript) | unang laman ng `<body>` | `GTM-NP3BQMJ6` |
+| Google Tag Manager | `<head>`, the `<!-- Google Tag Manager -->` block | `GTM-NP3BQMJ6` |
+| Google Analytics 4 (gtag.js) | `<head>`, the `<!-- Google tag (gtag.js) -->` block | `G-YK4RD62DQ6` |
+| Google Tag Manager (noscript) | first element inside `<body>` | `GTM-NP3BQMJ6` |
 
-Hindi kailangang galawin ang kahit anong file sa `src/`. Dahil kinokopya ng `seo-postbuild.mjs` ang `index.html` sa bawat page, **automatic na may analytics ang lahat ng pages**.
+You do not need to touch any file in `src/`. Because `seo-postbuild.mjs` copies `index.html` for every page, **all pages get analytics automatically**.
 
-### 3.2 Paano palitan o maglagay ng bagong Google Analytics
+### 3.2 How to add or change Google Analytics
 
-1. Pumunta sa https://analytics.google.com → **Admin** → **Data streams** → piliin ang web stream (o gumawa ng bago para sa domain).
-2. Kopyahin ang **Measurement ID** (itsura: `G-XXXXXXXXXX`).
-3. Buksan ang `index.html` at palitan ang ID sa **dalawang lugar** sa loob ng gtag block:
+1. Go to https://analytics.google.com → **Admin** → **Data streams** → select the web stream (or create one for the domain).
+2. Copy the **Measurement ID** (looks like `G-XXXXXXXXXX`).
+3. Open `index.html` and replace the ID in **both places** inside the gtag block:
 
    ```html
    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
@@ -112,38 +112,38 @@ Hindi kailangang galawin ang kahit anong file sa `src/`. Dahil kinokopya ng `seo
    </script>
    ```
 
-4. I-build at i-deploy ulit (Section 4).
+4. Build and deploy again (Section 4).
 
-### 3.3 Paano palitan ang Google Tag Manager
+### 3.3 How to change Google Tag Manager
 
-1. Sa https://tagmanager.google.com, kopyahin ang **Container ID** (`GTM-XXXXXXX`).
-2. Sa `index.html`, palitan ang ID sa:
-   - `<head>` — dulo ng GTM script: `...'dataLayer','GTM-XXXXXXX');`
-   - `<body>` — sa noscript iframe: `ns.html?id=GTM-XXXXXXX`
-3. I-build at i-deploy ulit.
+1. In https://tagmanager.google.com, copy the **Container ID** (`GTM-XXXXXXX`).
+2. In `index.html`, replace the ID in:
+   - `<head>` — at the end of the GTM script: `...'dataLayer','GTM-XXXXXXX');`
+   - `<body>` — in the noscript iframe: `ns.html?id=GTM-XXXXXXX`
+3. Build and deploy again.
 
-### 3.4 Babala: double counting
+### 3.4 Warning: double counting
 
-Kung ang **parehong GA4 ID** (`G-...`) ay naka-setup din bilang tag **sa loob ng GTM container**, dodoble ang bilang ng pageviews. Pumili lang ng isa:
-- **Option A:** GA4 direkta sa `index.html` (current setup) — huwag nang ilagay ang GA4 tag sa GTM.
-- **Option B:** GA4 sa loob ng GTM lang — tanggalin ang buong `<!-- Google tag (gtag.js) -->` block sa `index.html`.
+If the **same GA4 ID** (`G-...`) is also configured as a tag **inside the GTM container**, pageviews will be counted twice. Pick only one:
+- **Option A:** GA4 directly in `index.html` (current setup) — do not add a GA4 tag in GTM.
+- **Option B:** GA4 through GTM only — remove the whole `<!-- Google tag (gtag.js) -->` block from `index.html`.
 
-### 3.5 Paano i-check kung gumagana
+### 3.5 How to verify it works
 
-1. Buksan ang live site.
-2. Sa Google Analytics → **Reports** → **Realtime**, dapat makita ang sarili mong visit sa loob ng 1–2 minuto.
-3. O i-install ang **Tag Assistant** (https://tagassistant.google.com) at i-connect sa site.
+1. Open the live site.
+2. In Google Analytics → **Reports** → **Realtime**, your own visit should appear within 1–2 minutes.
+3. Or use **Tag Assistant** (https://tagassistant.google.com) and connect it to the site.
 
 ---
 
-## 4. Pag-upload sa Hosting
+## 4. Deploying to Hosting
 
-### 4.1 Vercel (recommended — ito ang gamit ng live site)
+### 4.1 Vercel (recommended — used by the live site)
 
-**Option A — Connect sa GitHub (automatic deploy tuwing may push)**
+**Option A — Connect to GitHub (automatic deploy on every push)**
 
-1. Mag-login sa https://vercel.com
-2. **Add New… → Project** → piliin ang repo na `BambuHarmony-Source-Code` → **Import**
+1. Log in to https://vercel.com
+2. **Add New… → Project** → select the `BambuHarmony-Source-Code` repo → **Import**
 3. Settings:
 
    | Setting | Value |
@@ -153,13 +153,13 @@ Kung ang **parehong GA4 ID** (`G-...`) ay naka-setup din bilang tag **sa loob ng
    | Output Directory | `dist` |
    | Install Command | `npm install` |
 
-4. **Environment Variables** → idagdag:
+4. **Environment Variables** → add:
    - `VITE_API_URL` = `https://bambuharmonyapi.aviethodigital.com/api`
-5. I-click ang **Deploy**.
+5. Click **Deploy**.
 
-Pagkatapos nito, bawat `git push` sa `main` ay automatic na magde-deploy.
+After this, every `git push` to `main` deploys automatically.
 
-**Option B — Gamit ang Vercel CLI**
+**Option B — Using the Vercel CLI**
 
 ```bash
 npx vercel login
@@ -167,33 +167,33 @@ npx vercel          # preview deploy
 npx vercel --prod   # production deploy
 ```
 
-**Custom domain (hal. `www.bambuharmony.ph`)**
+**Custom domain (e.g. `www.bambuharmony.ph`)**
 
-1. Vercel → Project → **Settings → Domains** → idagdag ang domain.
-2. Sa DNS provider ng domain, idagdag ang records na ibibigay ng Vercel:
-   - `A` record ng `@` → `76.76.21.21`
-   - `CNAME` ng `www` → `cname.vercel-dns.com`
-3. Hintayin ang SSL (automatic, ilang minuto hanggang ilang oras).
+1. Vercel → Project → **Settings → Domains** → add the domain.
+2. At the domain's DNS provider, add the records Vercel shows you:
+   - `A` record for `@` → `76.76.21.21`
+   - `CNAME` for `www` → `cname.vercel-dns.com`
+3. Wait for SSL (automatic, a few minutes to a few hours).
 
-Ang `vercel.json` sa repo ay naka-setup na para gumana ang mga page URL (`/about`, `/contact`, atbp.) — huwag burahin.
+The `vercel.json` in the repo is already set up so page URLs (`/about`, `/contact`, etc.) work — do not delete it.
 
 ### 4.2 Netlify
 
-1. https://app.netlify.com → **Add new site → Import an existing project** → GitHub → piliin ang repo.
+1. https://app.netlify.com → **Add new site → Import an existing project** → GitHub → select the repo.
 2. Build command: `npm run build` · Publish directory: `dist`
 3. **Site settings → Environment variables** → `VITE_API_URL`
-4. Para gumana ang mga page URL, gumawa ng file na `public/_redirects` na may laman:
+4. So page URLs work, create a file `public/_redirects` containing:
 
    ```
    /*    /index.html   200
    ```
 
-### 4.3 cPanel / Hostinger / kahit anong shared hosting
+### 4.3 cPanel / Hostinger / any shared hosting
 
-1. Sa sariling computer: i-set ang `.env` (Section 2.2), tapos `npm run build`.
-2. Buksan ang **File Manager** ng hosting → pumunta sa `public_html/`.
-3. I-upload ang **laman** ng `dist/` folder (hindi ang `dist` folder mismo).
-4. Gumawa ng `.htaccess` sa `public_html/` para gumana ang mga page URL:
+1. On your computer: set up `.env` (Section 2.2), then run `npm run build`.
+2. Open the hosting **File Manager** → go to `public_html/`.
+3. Upload the **contents** of the `dist/` folder (not the `dist` folder itself).
+4. Create an `.htaccess` file in `public_html/` so page URLs work:
 
    ```apache
    <IfModule mod_rewrite.c>
@@ -206,9 +206,9 @@ Ang `vercel.json` sa repo ay naka-setup na para gumana ang mga page URL (`/about
    </IfModule>
    ```
 
-### 4.4 VPS na may Nginx
+### 4.4 VPS with Nginx
 
-1. `npm run build`, tapos i-upload ang laman ng `dist/` sa server (hal. `/var/www/bambuharmony-frontend`).
+1. Run `npm run build`, then upload the contents of `dist/` to the server (e.g. `/var/www/bambuharmony-frontend`).
 2. Nginx config:
 
    ```nginx
@@ -227,40 +227,40 @@ Ang `vercel.json` sa repo ay naka-setup na para gumana ang mga page URL (`/about
 3. `sudo nginx -t && sudo systemctl reload nginx`
 4. SSL: `sudo certbot --nginx -d bambuharmony.ph -d www.bambuharmony.ph`
 
-### 4.5 Checklist pagkatapos mag-deploy
+### 4.5 Post-deploy checklist
 
-- [ ] Bumubukas ang homepage at lahat ng pages (`/about`, `/care-options`, `/location`, `/contact`)
-- [ ] Hindi 404 kapag ni-refresh ang isang page
-- [ ] Nagse-send ang contact form (makikita ang lead sa admin dashboard)
-- [ ] May visit sa Google Analytics Realtime
-- [ ] May dumating na Viber notification sa bagong lead (Section 5)
+- [ ] Homepage and all pages open (`/about`, `/care-options`, `/location`, `/contact`)
+- [ ] Refreshing a page does not return a 404
+- [ ] The contact form submits (the lead shows up in the admin dashboard)
+- [ ] Your visit appears in Google Analytics Realtime
+- [ ] A Viber notification arrives for the new lead (Section 5)
 
 ---
 
 ## 5. Viber Lead Notifications
 
-Tuwing may bagong inquiry sa website, may automatic na message na pumapasok sa isang **Viber Channel**.
+Every new website inquiry automatically posts a message to a **Viber Channel**.
 
-> **Mahalaga:** Ang Viber notification ay tumatakbo sa **backend API**, hindi sa frontend na ito. Walang kailangang baguhin sa frontend code — basta tama ang `VITE_API_URL`, ang API na ang bahala mag-send.
+> **Important:** Viber notifications run in the **backend API**, not in this frontend. No frontend code changes are needed — as long as `VITE_API_URL` is correct, the API handles sending.
 
-### 5.1 Paano ito gumagana
+### 5.1 How it works
 
 ```
-Website form  →  Backend API (bagong lead)  →  Viber Channels Post API  →  Viber Channel
+Website form  →  Backend API (new lead)  →  Viber Channels Post API  →  Viber Channel
 ```
 
-Viber **Channel** ang gamit, hindi regular na group chat, dahil hindi pwedeng mag-post ang bot sa ordinaryong group chat.
+A Viber **Channel** is used instead of a regular group chat, because bots cannot post to ordinary group chats.
 
-### 5.2 Gumawa ng Viber Channel at kunin ang token
+### 5.2 Create a Viber Channel and get the token
 
-1. Sa Viber app: **Chats → New → Create Channel** (hal. "BHLI LEADS NOTIFICATIONS").
-2. Buksan ang channel → **Channel info → Developer Tools** (o **Edit channel → Developer tools**).
-3. Kopyahin ang **Authentication Token**. **Huwag itong i-share o i-commit sa GitHub.**
-4. I-add sa channel ang mga taong dapat makatanggap ng notifications. Ang magpo-post ay dapat **superadmin** ng channel.
+1. In the Viber app: **Chats → New → Create Channel** (e.g. "BHLI LEADS NOTIFICATIONS").
+2. Open the channel → **Channel info → Developer Tools** (or **Edit channel → Developer tools**).
+3. Copy the **Authentication Token**. **Never share it or commit it to GitHub.**
+4. Add the people who should receive notifications. The account that posts must be a **superadmin** of the channel.
 
-### 5.3 I-set ang webhook (kailangan bago makapag-post)
+### 5.3 Set the webhook (required before posting)
 
-Kung walang webhook, lahat ng post ay magre-return ng `webhookNotSet`. I-set ito isang beses lang:
+Without a webhook, every post returns `webhookNotSet`. Set it once:
 
 ```bash
 curl -X POST https://chatapi.viber.com/pa/set_webhook \
@@ -269,9 +269,9 @@ curl -X POST https://chatapi.viber.com/pa/set_webhook \
   -d '{"url":"https://postman-echo.com/post"}'
 ```
 
-Dapat ang sagot ay may `"status":0`.
+The response should contain `"status":0`.
 
-### 5.4 Kunin ang Sender ID
+### 5.4 Get the Sender ID
 
 ```bash
 curl -X POST https://chatapi.viber.com/pa/get_account_info \
@@ -280,24 +280,24 @@ curl -X POST https://chatapi.viber.com/pa/get_account_info \
   -d '{}'
 ```
 
-Sa sagot, hanapin sa `members` ang taong may `"role": "superadmin"` at kopyahin ang kanyang `id`. Ito ang **`VIBER_SENDER_ID`**.
+In the response, find the member under `members` with `"role": "superadmin"` and copy their `id`. This is the **`VIBER_SENDER_ID`**.
 
-> Bawat channel ay may sariling token **at** sariling member IDs. Kapag gumawa ng bagong channel, kunin ulit pareho.
+> Each channel has its own token **and** its own member IDs. If you create a new channel, get both again.
 
-### 5.5 Ilagay sa backend API
+### 5.5 Add them to the backend API
 
-Sa `.env` ng backend API server (hindi sa frontend):
+In the backend API server's `.env` (not the frontend):
 
 ```env
-VIBER_AUTH_TOKEN=<token mula sa Developer Tools>
-VIBER_SENDER_ID=<superadmin id mula sa get_account_info>
+VIBER_AUTH_TOKEN=<token from Developer Tools>
+VIBER_SENDER_ID=<superadmin id from get_account_info>
 ```
 
-Pagkatapos, i-restart ang API. Kapag walang laman ang dalawang ito, tahimik lang na hindi magse-send ng Viber (walang error sa website).
+Then restart the API. If either value is empty, Viber notifications are silently skipped (no error on the website).
 
-### 5.6 I-test
+### 5.6 Test
 
-Mag-test post direkta:
+Send a test post directly:
 
 ```bash
 curl -X POST https://chatapi.viber.com/pa/post \
@@ -306,31 +306,31 @@ curl -X POST https://chatapi.viber.com/pa/post \
   -d '{"from":"<VIBER_SENDER_ID>","type":"text","text":"Test notification"}'
 ```
 
-`"status":0` = success. Pagkatapos, mag-submit ng test inquiry sa website at dapat may dumating na message na nagsisimula sa **BAMBUHARMONY NEW LEADS**.
+`"status":0` means success. Then submit a test inquiry on the website — a message starting with **BAMBUHARMONY NEW LEADS** should arrive.
 
 ### 5.7 Troubleshooting
 
-| Error | Ibig sabihin | Ayos |
+| Error | Meaning | Fix |
 |---|---|---|
-| `webhookNotSet` (status 10) | Walang webhook | Gawin ang Section 5.3 |
-| Invalid sender / not a member | Maling `VIBER_SENDER_ID` o hindi superadmin | Gawin ulit ang Section 5.4 |
-| Invalid auth token | Maling o lumang token | Kopyahin ulit mula sa Developer Tools |
-| Walang dumarating pero walang error | Kulang ang env sa API | I-check ang `.env` ng API at i-restart |
+| `webhookNotSet` (status 10) | No webhook set | Do Section 5.3 |
+| Invalid sender / not a member | Wrong `VIBER_SENDER_ID`, or not a superadmin | Redo Section 5.4 |
+| Invalid auth token | Wrong or outdated token | Copy it again from Developer Tools |
+| Nothing arrives, no error | Missing env values in the API | Check the API `.env` and restart |
 
 ---
 
-## 6. Pag-update ng website
+## 6. Updating the website
 
 ```bash
 git pull
-# gawin ang changes
-npm run build          # i-test na walang error
+# make your changes
+npm run build          # confirm there are no errors
 git add -A
 git commit -m "Describe the change"
 git push
 ```
 
-Kung naka-connect ang Vercel sa GitHub (Section 4.1 Option A), automatic na magde-deploy pagkatapos ng push. Kung iba ang hosting, i-upload ulit ang laman ng `dist/`.
+If Vercel is connected to GitHub (Section 4.1 Option A), it deploys automatically after the push. On other hosting, upload the contents of `dist/` again.
 
 ---
 
