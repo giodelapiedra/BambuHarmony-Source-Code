@@ -1,0 +1,10 @@
+{
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/about", "destination": "/about/index.html" },
+    { "source": "/care-options", "destination": "/care-options/index.html" },
+    { "source": "/location", "destination": "/location/index.html" },
+    { "source": "/contact", "destination": "/contact/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

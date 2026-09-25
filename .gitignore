@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.local
+.DS_Store
+.vercel
+admin
+api
+undefined
+*.md
+viber_notify.py

@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ivory font-sans text-charcoal antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif text-forest;
+    letter-spacing: -0.015em;
+  }
+
+  /* Editorial display headings — tighter tracking, refined leading */
+  .text-display {
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+  }
+
+  ::selection {
+    @apply bg-gold/30 text-forest;
+  }
+}
+
+@layer components {
+  /* Recurring quiet-luxury motif: a short gold rule paired with an eyebrow */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-bamboo;
+  }
+
+  .gold-rule {
+    @apply inline-block h-px w-10 bg-gold align-middle;
+  }
+}
+
+/* --- Testimonial marquee (plain CSS so it always runs) --- */
+@keyframes bh-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.bh-marquee-track {
+  animation: bh-marquee 45s linear infinite;
+  will-change: transform;
+}
+
+.bh-marquee-track--reverse {
+  animation: bh-marquee 55s linear infinite reverse;
+}
+
+.bh-marquee-row:hover .bh-marquee-track {
+  animation-play-state: paused;
+}
+
+/* ── Soft atmospheric glow — matches site's gold + forest palette ── */
+body,
+.bg-ivory {
+  background-image:
+    radial-gradient(ellipse 80vw 60vh at -5% -10%, rgba(200, 169, 106, 0.30) 0%, transparent 70%),
+    radial-gradient(ellipse 70vw 70vh at 108% 108%, rgba(111, 143, 95, 0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 55vw 45vh at 108% -10%, rgba(200, 169, 106, 0.18) 0%, transparent 65%);
+}
