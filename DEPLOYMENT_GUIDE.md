@@ -233,17 +233,153 @@ The `vercel.json` in the repo is already set up so page URLs (`/about`, `/contac
 - [ ] Refreshing a page does not return a 404
 - [ ] The contact form submits (the lead shows up in the admin dashboard)
 - [ ] Your visit appears in Google Analytics Realtime
-- [ ] A Viber notification arrives for the new lead (Section 5)
+- [ ] A Viber notification arrives for the new lead (Section 6)
 
 ---
 
-## 5. Viber Lead Notifications
+## 5. Connecting the Contact Form to Your Own Dashboard
+
+The contact form on `/contact` sends every inquiry to a backend API. By default this is the Bambu Harmony API and admin dashboard. This section explains what to change to send leads to **your own** backend, dashboard or CRM.
+
+### 5.1 Where the form code lives
+
+| File | What it does | Change it when |
+|---|---|---|
+| `.env` → `VITE_API_URL` | Base URL of the backend that receives leads | You use a different server / domain |
+| `src/services/api.js` | Creates the HTTP client using `VITE_API_URL` | You need extra headers (e.g. an API key) |
+| `src/services/contactService.js` | `submitInquiry()` — builds the lead data and sends `POST {VITE_API_URL}/leads` | Your endpoint path or field names are different |
+| `src/pages/Contact.jsx` | The form itself; calls `submitInquiry()` on submit | You add, remove or rename form fields |
+
+The form shows a success screen when the server responds with any **2xx** status, and shows *"Something went wrong. Please try again later."* on any error.
+
+### 5.2 Option A — Keep the Bambu Harmony backend and admin dashboard
+
+1. Set `VITE_API_URL` to the API URL (Section 2.2), in `.env` and in your hosting's environment variables.
+2. On the **API server's** `.env`, add your website domain to `CLIENT_URL` so the browser is allowed to call the API (CORS). Multiple domains are comma-separated:
+
+   ```env
+   CLIENT_URL=https://www.bambuharmony.ph,https://your-new-domain.com
+   ```
+
+   `www` and non-`www` versions are accepted automatically. Restart the API after changing it.
+3. Leads appear in the admin dashboard under **Leads**.
+
+> If the form works locally but fails on the live site, the domain is almost always missing from `CLIENT_URL`. Open the browser DevTools → **Console** and look for a CORS error.
+
+### 5.3 Option B — Your own backend / dashboard
+
+Your server must provide:
+
+1. An endpoint **`POST {VITE_API_URL}/leads`** that accepts JSON (`Content-Type: application/json`).
+2. A **2xx** response on success (e.g. `201 Created`).
+3. **CORS** enabled for your website domain.
+
+Then set `VITE_API_URL` to your server, e.g. `https://api.yourdomain.com/api`.
+
+If your endpoint is at a different path (e.g. `/inquiries`), change this line in `src/services/contactService.js`:
+
+```js
+const response = await api.post('/leads', {
+```
+
+**Fields sent by the form:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `name` | string | **Always sent.** Full name |
+| `firstName`, `lastName` | string | |
+| `email`, `phone` | string | |
+| `contactPreference` | string | Preferred contact method |
+| `relationship` | string | Relationship to the future resident |
+| `residentAge` | string | |
+| `residentLocation`, `residentCity`, `residentCountry`, `residentCityAbroad` | string | Where the resident currently lives |
+| `citizenship`, `citizenshipOther`, `seniorId` | string | |
+| `timeline`, `budget`, `preferredAction` | string | |
+| `adlAssistance`, `eatingIndependence`, `mobility`, `continence`, `cognition`, `communication`, `behavior` | string | Care needs answers |
+| `assessment` | object | Raw care assessment answers (Step 4). The Bambu Harmony API scores these on the server |
+| `datePreference1` | string | Preferred visit date |
+| `message` | string | Free-text message |
+| `source` | string | Where the lead came from, e.g. `contact-form` |
+| `utmSource`, `utmMedium`, `utmCampaign` | string | Only sent when the visitor arrived with UTM parameters |
+
+Fields the visitor left empty are not sent.
+
+**Example request body:**
+
+```json
+{
+  "name": "Juan Dela Cruz",
+  "firstName": "Juan",
+  "lastName": "Dela Cruz",
+  "email": "juan@example.com",
+  "phone": "09171234567",
+  "relationship": "Son",
+  "residentAge": "78",
+  "timeline": "Within 1 month",
+  "preferredAction": "Book a facility visit",
+  "datePreference1": "2026-10-05",
+  "message": "We'd like to visit this weekend.",
+  "source": "contact-form",
+  "utmSource": "facebook"
+}
+```
+
+### 5.4 Option C — Google Sheets, Zapier, Make, GoHighLevel or any webhook
+
+If your dashboard/CRM gives you a **webhook URL**, send the lead there instead. Replace the request in `src/services/contactService.js`:
+
+```js
+// Before
+const response = await api.post('/leads', { ...fields });
+
+// After
+const response = await fetch(import.meta.env.VITE_LEADS_WEBHOOK_URL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ ...fields }),
+});
+if (!response.ok) throw new Error('Lead submission failed');
+```
+
+Here `{ ...fields }` is the same object that is currently passed to `api.post` (name, email, phone, etc.). Keep it as is.
+
+Then add the webhook URL to `.env` and to your hosting's environment variables:
+
+```env
+VITE_LEADS_WEBHOOK_URL=https://hooks.example.com/your-webhook-id
+```
+
+In the `return` at the bottom of `submitInquiry()`, replace `...response.data` with nothing (or `...(await response.json())` if your webhook returns JSON).
+
+> **Note:** Anything in a `VITE_` variable is visible in the browser. Only use webhook URLs that are meant to be public. Never put passwords, secret API keys or database credentials in the frontend.
+
+### 5.5 Test the connection
+
+1. Run `npm run dev` (or open the deployed site).
+2. Fill out the form on `/contact` and submit.
+3. Confirm the success screen appears.
+4. Confirm the lead shows up in your dashboard / CRM / sheet.
+5. If it fails: open DevTools → **Network**, click the `leads` (or webhook) request, and check the status code and response.
+
+| Problem | Likely cause |
+|---|---|
+| CORS error in Console | Your domain is not allowed on the server (`CLIENT_URL` in Option A) |
+| 404 Not Found | Wrong `VITE_API_URL` or endpoint path |
+| 400 / 422 | The server rejected a field (check its validation rules) |
+| 429 Too Many Requests | Rate limit on the server — wait and try again |
+| Works locally, not live | Environment variable not set in the hosting dashboard, or the site was not rebuilt after setting it |
+
+> After changing any `VITE_` variable you must **rebuild and redeploy**. The value is baked in at build time.
+
+---
+
+## 6. Viber Lead Notifications
 
 Every new website inquiry automatically posts a message to a **Viber Channel**.
 
 > **Important:** Viber notifications run in the **backend API**, not in this frontend. No frontend code changes are needed — as long as `VITE_API_URL` is correct, the API handles sending.
 
-### 5.1 How it works
+### 6.1 How it works
 
 ```
 Website form  →  Backend API (new lead)  →  Viber Channels Post API  →  Viber Channel
@@ -251,14 +387,14 @@ Website form  →  Backend API (new lead)  →  Viber Channels Post API  →  Vi
 
 A Viber **Channel** is used instead of a regular group chat, because bots cannot post to ordinary group chats.
 
-### 5.2 Create a Viber Channel and get the token
+### 6.2 Create a Viber Channel and get the token
 
 1. In the Viber app: **Chats → New → Create Channel** (e.g. "BHLI LEADS NOTIFICATIONS").
 2. Open the channel → **Channel info → Developer Tools** (or **Edit channel → Developer tools**).
 3. Copy the **Authentication Token**. **Never share it or commit it to GitHub.**
 4. Add the people who should receive notifications. The account that posts must be a **superadmin** of the channel.
 
-### 5.3 Set the webhook (required before posting)
+### 6.3 Set the webhook (required before posting)
 
 Without a webhook, every post returns `webhookNotSet`. Set it once:
 
@@ -271,7 +407,7 @@ curl -X POST https://chatapi.viber.com/pa/set_webhook \
 
 The response should contain `"status":0`.
 
-### 5.4 Get the Sender ID
+### 6.4 Get the Sender ID
 
 ```bash
 curl -X POST https://chatapi.viber.com/pa/get_account_info \
@@ -284,7 +420,7 @@ In the response, find the member under `members` with `"role": "superadmin"` and
 
 > Each channel has its own token **and** its own member IDs. If you create a new channel, get both again.
 
-### 5.5 Add them to the backend API
+### 6.5 Add them to the backend API
 
 In the backend API server's `.env` (not the frontend):
 
@@ -295,7 +431,7 @@ VIBER_SENDER_ID=<superadmin id from get_account_info>
 
 Then restart the API. If either value is empty, Viber notifications are silently skipped (no error on the website).
 
-### 5.6 Test
+### 6.6 Test
 
 Send a test post directly:
 
@@ -308,18 +444,18 @@ curl -X POST https://chatapi.viber.com/pa/post \
 
 `"status":0` means success. Then submit a test inquiry on the website — a message starting with **BAMBUHARMONY NEW LEADS** should arrive.
 
-### 5.7 Troubleshooting
+### 6.7 Troubleshooting
 
 | Error | Meaning | Fix |
 |---|---|---|
-| `webhookNotSet` (status 10) | No webhook set | Do Section 5.3 |
-| Invalid sender / not a member | Wrong `VIBER_SENDER_ID`, or not a superadmin | Redo Section 5.4 |
+| `webhookNotSet` (status 10) | No webhook set | Do Section 6.3 |
+| Invalid sender / not a member | Wrong `VIBER_SENDER_ID`, or not a superadmin | Redo Section 6.4 |
 | Invalid auth token | Wrong or outdated token | Copy it again from Developer Tools |
 | Nothing arrives, no error | Missing env values in the API | Check the API `.env` and restart |
 
 ---
 
-## 6. Updating the website
+## 7. Updating the website
 
 ```bash
 git pull

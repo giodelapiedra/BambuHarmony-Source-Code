@@ -90,13 +90,15 @@ API calls live in `src/services/`. Components and pages should not hardcode back
 
 New inquiries are saved by the backend API, which also sends the Viber lead notification.
 
+To send form leads to your own backend, dashboard, CRM or webhook, see [DEPLOYMENT_GUIDE.md — Section 5](DEPLOYMENT_GUIDE.md#5-connecting-the-contact-form-to-your-own-dashboard).
+
 ## Google Analytics
 
 Google Tag Manager and Google Analytics 4 are installed in **`index.html`** (marked with a `GOOGLE ANALYTICS / TAG MANAGER` comment). See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md#3-google-analytics--google-tag-manager) for how to change the IDs.
 
 ## Deployment
 
-Build with `npm run build` and upload the `dist/` folder to any static host. Full step-by-step instructions for Vercel, Netlify, cPanel/Hostinger and Nginx, plus Google Analytics and Viber setup, are in **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**.
+Build with `npm run build` and upload the `dist/` folder to any static host. Full step-by-step instructions for Vercel, Netlify, cPanel/Hostinger and Nginx, plus Google Analytics, form/dashboard connection and Viber setup, are in **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**.
 
 ---
 
